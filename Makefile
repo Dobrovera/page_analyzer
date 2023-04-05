@@ -4,8 +4,8 @@ dev:
 build:
 	poetry build
 
-package-install:
-	python3 -m pip install --force dist/*.whl
+install:
+	poetry install
 
 lint:
 	poetry run flake8 page_analyzer
