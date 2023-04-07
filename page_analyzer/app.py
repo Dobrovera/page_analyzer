@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from flask import Flask
+from flask import render_template
 
 
 app = Flask(__name__)
@@ -13,4 +14,6 @@ DEBUG = os.getenv('DEBUG', False)
 
 @app.route('/')
 def hello_world():
-    return 'Hello 3 project!'
+    return render_template(
+        'index.html',
+    )
