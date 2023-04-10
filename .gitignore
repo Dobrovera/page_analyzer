@@ -8,3 +8,4 @@ dist/
 .idea/
 venv/
 .flaskenv
+.env/
