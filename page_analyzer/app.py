@@ -40,5 +40,4 @@ def check_the_link(link):
             pass
 
     if valids == 1:
-        print("OK")
         return True
