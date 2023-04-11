@@ -2,7 +2,7 @@ import requests
 import psycopg2
 import os
 from dotenv import load_dotenv
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, url_for, redirect
 from requests.exceptions import MissingSchema
 
 load_dotenv()
@@ -24,8 +24,13 @@ def insert_value():
         with conn.cursor() as curs:
             if check_the_link(request.form.get("url")) \
                     and check_url_into_db(request.form.get("url")):
-                curs.execute('INSERT INTO urls (name) VALUES (%s)',
-                             (request.form.get("url"), ))
+                curs.execute(
+                    'INSERT INTO urls (name) VALUES (%s) RETURNING id',
+                    (request.form.get("url"), ))
+                id = curs.fetchone()[0]
+                print(id)
+                return redirect(url_for('get_id_url', id=id))
+
     return render_template(
         'index.html',
     )
@@ -33,15 +38,21 @@ def insert_value():
 
 @app.get('/urls')
 def get_all_urls():
+    urls = get_all_names_and_id()
     return render_template(
-        'urls.html'
+        'urls.html',
+        urls=urls
     )
 
 
-@app.route('/urls/<id>')
-def get_this_url(id):
+@app.get('/urls/<id>')
+def get_id_url(id):
+    url = get_info_by_id(id)
     return render_template(
-        'urls.html'
+        'urls_id.html',
+        name=url['name'],
+        id=url['id'],
+        created_at=url['created_at']
     )
 
 
@@ -58,19 +69,59 @@ def check_the_link(link):
         return True
 
 
+def get_info_by_id(id):
+    this_url = {}
+    conn = psycopg2.connect(DATABASE_URL)
+    curs = conn.cursor()
+    curs.execute(f"SELECT name FROM urls WHERE id = {id};")
+    this_url['name'] = curs.fetchone()[0]
+    curs.execute(f"SELECT id FROM urls WHERE id = {id};")
+    this_url['id'] = curs.fetchone()[0]
+    curs.execute(f"SELECT created_at FROM urls WHERE id = {id};")
+    this_url['created_at'] = curs.fetchone()[0]
+    print(this_url)
+    return this_url
+
+
 def get_url_id(url):
-    CONN = psycopg2.connect(DATABASE_URL)
-    CURS = CONN.cursor()
-    CURS.execute(f"SELECT id FROM urls WHERE name = '{url}';")
-    names = CURS.fetchone()
+    conn = psycopg2.connect(DATABASE_URL)
+    curs = conn.cursor()
+    curs.execute(f"SELECT id FROM urls WHERE name = '{url}';")
+    names = curs.fetchone()
     return names[0]
 
 
 def check_url_into_db(url):
-    CONN = psycopg2.connect(DATABASE_URL)
-    CURS = CONN.cursor()
-    CURS.execute(f"SELECT name FROM urls WHERE name = '{url}'")
-    names = CURS.fetchone()
+    conn = psycopg2.connect(DATABASE_URL)
+    curs = conn.cursor()
+    curs.execute(f"SELECT name FROM urls WHERE name = '{url}'")
+    names = curs.fetchone()
     if names:
         return False
     return True
+
+
+def get_all_names_and_id():
+    urls = []
+    try:
+        with psycopg2.connect(DATABASE_URL) as conn:
+            with conn.cursor() as curs:
+                curs.execute(
+                    "SELECT DISTINCT ON (id) id, name, created_at "
+                    "FROM urls;"
+                )
+                for data in curs:
+                    created_at = data[2]
+                    name = data[1]
+                    id = data[0]
+                    urls.append(
+                        {"id": id,
+                         "name": name,
+                         "created_at": created_at
+                         }
+                    )
+    except psycopg2.Error:
+        return urls
+    finally:
+        conn.close()
+    return urls
