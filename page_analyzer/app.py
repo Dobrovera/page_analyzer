@@ -2,7 +2,8 @@ import requests
 import psycopg2
 import os
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, url_for, redirect, flash, get_flashed_messages
+from flask import Flask, render_template, request, \
+    url_for, redirect, flash, get_flashed_messages
 from requests.exceptions import MissingSchema
 
 load_dotenv()
@@ -10,6 +11,7 @@ A = os.getenv('FLASK_APP')
 DATABASE_URL = os.getenv('DATABASE_URL')
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
+
 
 @app.get('/')
 def get_root():
@@ -37,7 +39,7 @@ def insert_value():
     flash('Некорректный URL', 'error ')
     return render_template(
         'index.html',
-        message = get_flashed_messages(with_categories=True)
+        message=get_flashed_messages(with_categories=True)
     )
 
 
