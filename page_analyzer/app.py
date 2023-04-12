@@ -2,19 +2,17 @@ import requests
 import psycopg2
 import os
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, url_for, redirect
+from flask import Flask, render_template, request, url_for, redirect, flash, get_flashed_messages
 from requests.exceptions import MissingSchema
 
 load_dotenv()
-SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = os.getenv('DEBUG', False)
 A = os.getenv('FLASK_APP')
 DATABASE_URL = os.getenv('DATABASE_URL')
 app = Flask(__name__)
-
+app.secret_key = os.getenv('SECRET_KEY')
 
 @app.get('/')
-def hello_world():
+def get_root():
     return render_template('index.html')
 
 
@@ -25,14 +23,21 @@ def insert_value():
             if check_the_link(request.form.get("url")) \
                     and check_url_into_db(request.form.get("url")):
                 curs.execute(
-                    'INSERT INTO urls (name) VALUES (%s) RETURNING id',
+                    'INSERT INTO urls (name) VALUES (%s) RETURNING id;',
                     (request.form.get("url"), ))
                 id = curs.fetchone()[0]
-                print(id)
+                flash('Ссылка успешно добавлена', 'success')
                 return redirect(url_for('get_id_url', id=id))
-
+            elif check_the_link(request.form.get("url")):
+                url = request.form.get("url")
+                curs.execute(f"SELECT id FROM urls WHERE name = '{url}';")
+                id = curs.fetchone()[0]
+                flash('Страница уже существует', 'warning')
+                return redirect(url_for('get_id_url', id=id))
+    flash('Некорректный URL', 'error ')
     return render_template(
         'index.html',
+        message = get_flashed_messages(with_categories=True)
     )
 
 
@@ -48,11 +53,14 @@ def get_all_urls():
 @app.get('/urls/<id>')
 def get_id_url(id):
     url = get_info_by_id(id)
+    message = get_flashed_messages(with_categories=True)
+    print(message)
     return render_template(
         'urls_id.html',
         name=url['name'],
         id=url['id'],
-        created_at=url['created_at']
+        created_at=url['created_at'],
+        message=message
     )
 
 
@@ -79,7 +87,6 @@ def get_info_by_id(id):
     this_url['id'] = curs.fetchone()[0]
     curs.execute(f"SELECT created_at FROM urls WHERE id = {id};")
     this_url['created_at'] = curs.fetchone()[0]
-    print(this_url)
     return this_url
 
 

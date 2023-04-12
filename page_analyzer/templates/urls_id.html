@@ -19,6 +19,11 @@
         </div>
     </nav>
   </header>
+  {% if message %}
+    {% for category, mess in message %}
+        <div class="alert alert-{{ category }}" role="alert">{{ mess }}</div>
+    {% endfor %}
+  {% endif %}
   <main class="flex-grow-1">
     <div class="container-lg mt-3">
         <h1>Сайты</h1>
