@@ -43,6 +43,12 @@ def insert_value():
     )
 
 
+@app.post('/urls/<id>/checks')
+def do_check(id):
+    add_to_check_table(id)
+    return redirect(url_for('get_id_url', id=id))
+
+
 @app.get('/urls')
 def get_all_urls():
     urls = get_all_names_and_id()
@@ -56,13 +62,14 @@ def get_all_urls():
 def get_id_url(id):
     url = get_info_by_id(id)
     message = get_flashed_messages(with_categories=True)
-    print(message)
+    url_check = get_info_from_check_table(id)
     return render_template(
         'urls_id.html',
         name=url['name'],
         id=url['id'],
         created_at=url['created_at'],
-        message=message
+        message=message,
+        check=url_check
     )
 
 
@@ -93,21 +100,21 @@ def get_info_by_id(id):
 
 
 def get_url_id(url):
-    conn = psycopg2.connect(DATABASE_URL)
-    curs = conn.cursor()
-    curs.execute(f"SELECT id FROM urls WHERE name = '{url}';")
-    names = curs.fetchone()
-    return names[0]
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor() as curs:
+            curs.execute(f"SELECT id FROM urls WHERE name = '{url}';")
+            names = curs.fetchone()
+            return names[0]
 
 
 def check_url_into_db(url):
-    conn = psycopg2.connect(DATABASE_URL)
-    curs = conn.cursor()
-    curs.execute(f"SELECT name FROM urls WHERE name = '{url}'")
-    names = curs.fetchone()
-    if names:
-        return False
-    return True
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor() as curs:
+            curs.execute(f"SELECT name FROM urls WHERE name = '{url}'")
+            names = curs.fetchone()
+        if names:
+            return False
+        return True
 
 
 def get_all_names_and_id():
@@ -116,8 +123,10 @@ def get_all_names_and_id():
         with psycopg2.connect(DATABASE_URL) as conn:
             with conn.cursor() as curs:
                 curs.execute(
-                    "SELECT DISTINCT ON (id) id, name, created_at "
-                    "FROM urls;"
+                    "SELECT DISTINCT ON (id) urls.id, urls.name, "
+                    "url_checks.created_at "
+                    "FROM urls "
+                    "JOIN url_checks ON (urls.id = url_checks.url_id)"
                 )
                 for data in curs:
                     created_at = data[2]
@@ -126,11 +135,41 @@ def get_all_names_and_id():
                     urls.append(
                         {"id": id,
                          "name": name,
+                         "created_at": created_at,
+                         }
+                    )
+    except psycopg2.Error as e:
+        print(e)
+        return urls
+    print(urls)
+    return urls
+
+
+def add_to_check_table(id):
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor() as curs:
+            curs.execute(f"INSERT INTO url_checks (url_id) VALUES ({id});")
+
+
+def get_info_from_check_table(url_id):
+    urls_check = []
+    try:
+        with psycopg2.connect(DATABASE_URL) as conn:
+            with conn.cursor() as curs:
+                curs.execute(
+                    f"SELECT id, created_at "
+                    f"FROM url_checks "
+                    f"WHERE url_id = {url_id}"
+                    f"ORDER BY id DESC;")
+                for data in curs:
+                    created_at = data[1]
+                    id = data[0]
+                    urls_check.append(
+                        {"id": id,
                          "created_at": created_at
                          }
                     )
     except psycopg2.Error:
-        return urls
-    finally:
-        conn.close()
-    return urls
+        return urls_check
+    print(urls_check)
+    return urls_check
