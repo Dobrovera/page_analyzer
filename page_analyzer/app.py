@@ -139,9 +139,7 @@ def get_all_names_and_id():
                          }
                     )
     except psycopg2.Error as e:
-        print(e)
         return urls
-    print(urls)
     return urls
 
 
@@ -171,5 +169,4 @@ def get_info_from_check_table(url_id):
                     )
     except psycopg2.Error:
         return urls_check
-    print(urls_check)
     return urls_check
