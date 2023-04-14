@@ -138,7 +138,7 @@ def get_all_names_and_id():
                          "created_at": created_at,
                          }
                     )
-    except psycopg2.Error as e:
+    except psycopg2.Error:
         return urls
     return urls
 
