@@ -64,9 +64,9 @@
                     {% for i in check %}
                     <tr>
                         <th>{{ i.id }}</th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
+                        <th>{{ i.status_code }}</th>
+                        <th>{{ i.h1 }}</th>
+                        <th>{{ i.title }}</th>
                         <th></th>
                         <th>{{ i.created_at }}</th>
                     {% endfor %}

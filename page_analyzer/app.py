@@ -1,6 +1,7 @@
 import requests
 import psycopg2
 import os
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, \
     url_for, redirect, flash, get_flashed_messages
@@ -69,7 +70,7 @@ def get_id_url(id):
         id=url['id'],
         created_at=url['created_at'],
         message=message,
-        check=url_check
+        check=url_check,
     )
 
 
@@ -124,11 +125,15 @@ def get_all_names_and_id():
             with conn.cursor() as curs:
                 curs.execute(
                     "SELECT DISTINCT ON (id) urls.id, urls.name, "
-                    "url_checks.created_at "
+                    "url_checks.created_at, url_checks.h1, "
+                    "url_checks.title, url_checks.status_code "
                     "FROM urls "
                     "JOIN url_checks ON (urls.id = url_checks.url_id)"
                 )
                 for data in curs:
+                    status_code = data[5]
+                    title = data[4]
+                    h1 = data[3]
                     created_at = data[2]
                     name = data[1]
                     id = data[0]
@@ -136,17 +141,32 @@ def get_all_names_and_id():
                         {"id": id,
                          "name": name,
                          "created_at": created_at,
+                         "h1": h1,
+                         "title": title,
+                         "status_code": status_code
                          }
                     )
     except psycopg2.Error:
         return urls
+    print(urls)
     return urls
 
 
 def add_to_check_table(id):
+    name_url = get_info_by_id(id)['name']
+    r = requests.get(name_url)
+    status_code = r.status_code
+    soup = BeautifulSoup(r.text, 'html.parser')
+    title = str(soup.find_all('title'))[8:-9]
+    h1 = str(soup.find_all('h1'))[5:-7]
     with psycopg2.connect(DATABASE_URL) as conn:
         with conn.cursor() as curs:
-            curs.execute(f"INSERT INTO url_checks (url_id) VALUES ({id});")
+            curs.execute(""
+                         "INSERT INTO url_checks "
+                         "(url_id, status_code, h1, title) "
+                         "VALUES (%s, %s, %s, %s);",
+                         (id, status_code, h1, title)
+                         )
 
 
 def get_info_from_check_table(url_id):
@@ -154,17 +174,21 @@ def get_info_from_check_table(url_id):
     try:
         with psycopg2.connect(DATABASE_URL) as conn:
             with conn.cursor() as curs:
-                curs.execute(
-                    f"SELECT id, created_at "
-                    f"FROM url_checks "
-                    f"WHERE url_id = {url_id}"
-                    f"ORDER BY id DESC;")
+                curs.execute(f"SELECT id, status_code, h1, title, created_at "
+                             f"FROM url_checks WHERE url_id = {url_id} "
+                             f"ORDER BY id DESC;")
                 for data in curs:
-                    created_at = data[1]
+                    created_at = data[4]
+                    title = data[3]
+                    h1 = data[2]
+                    status_code = data[1]
                     id = data[0]
                     urls_check.append(
                         {"id": id,
-                         "created_at": created_at
+                         "created_at": created_at,
+                         "h1": h1,
+                         "title": title,
+                         "status_code": status_code
                          }
                     )
     except psycopg2.Error:
