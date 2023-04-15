@@ -163,14 +163,18 @@ def add_to_check_table(id):
     h1 = str(soup.find_all('h1'))[5:-7]
     description = str(soup.find_all('meta',
                                     attrs={'name': 'description'}))[16:-24]
-    with psycopg2.connect(DATABASE_URL) as conn:
-        with conn.cursor() as curs:
-            curs.execute(""
-                         "INSERT INTO url_checks "
-                         "(url_id, status_code, h1, title, description) "
-                         "VALUES (%s, %s, %s, %s, %s);",
-                         (id, status_code, h1, title, description)
-                         )
+    try:
+        with psycopg2.connect(DATABASE_URL) as conn:
+            with conn.cursor() as curs:
+                curs.execute(""
+                             "INSERT INTO url_checks "
+                             "(url_id, status_code, h1, title, description) "
+                             "VALUES (%s, %s, %s, %s, %s);",
+                             (id, status_code, h1, title, description)
+                             )
+        flash('Страница успешно проверена', 'success')
+    except psycopg2.Error:
+        flash('Произошла ошибка при проверке', 'danger')
 
 
 def get_info_from_check_table(url_id):
