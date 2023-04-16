@@ -40,7 +40,7 @@ def insert_value():
                              f"FROM urls "
                              f"WHERE name = '{normolize_name}';")
                 id = curs.fetchone()[0]
-                flash('Страница уже существует', 'warning')
+                flash('Страница уже существует', 'info')
                 return redirect(url_for('get_id_url', id=id))
     flash('Некорректный URL', 'error ')
     return render_template(
