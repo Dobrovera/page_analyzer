@@ -15,13 +15,13 @@
 В файле database.url можно найти SQL-запросы для создания локальной БД
 
 Для локального запуска:
-> git clone https://github.com/Dobrovera/python-project-83
+> #### git clone https://github.com/Dobrovera/python-project-83
 > 
-> cd python-project-83
+> #### cd python-project-83
 > 
-> make install
-
-> touch .env
+> #### make install
+> 
+> #### touch .env
 
 
 Необходимо самостоятельно добавить в .env файл переменные окрyжения 
@@ -30,3 +30,5 @@
 + FLASK_RUN_PORT=8000 
 + DATABASE_URL={provider}://{user}:{password}@{host}:{port}/{db} 
 + SECRET_KEY="some-txt"
+
+SQL-запросы для создания таблиц в локальной БД находятся в файле database.sql
