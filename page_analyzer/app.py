@@ -162,7 +162,7 @@ def check_request(id):
         url_info['h1'] = str(soup.find_all('h1'))[5:-6]
         url_info['description'] = str(soup.find_all
                                       ('meta',
-                                       attrs={'name': 'description'}))[16:-24]
+                                       attrs={'name': 'description'}))[16:-23]
         return url_info
     except requests.exceptions.RequestException:
         flash('Произошла ошибка при проверке', 'danger')
