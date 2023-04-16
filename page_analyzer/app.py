@@ -29,7 +29,7 @@ def insert_value():
                     'INSERT INTO urls (name) VALUES (%s) RETURNING id;',
                     (request.form.get("url"), ))
                 id = curs.fetchone()[0]
-                flash('Ссылка успешно добавлена', 'success')
+                flash('Страница успешно добавлена', 'success')
                 return redirect(url_for('get_id_url', id=id))
             elif check_the_link(request.form.get("url")):
                 url = request.form.get("url")
@@ -89,14 +89,14 @@ def check_the_link(link):
 
 def get_info_by_id(id):
     this_url = {}
-    conn = psycopg2.connect(DATABASE_URL)
-    curs = conn.cursor()
-    curs.execute(f"SELECT name FROM urls WHERE id = {id};")
-    this_url['name'] = curs.fetchone()[0]
-    curs.execute(f"SELECT id FROM urls WHERE id = {id};")
-    this_url['id'] = curs.fetchone()[0]
-    curs.execute(f"SELECT created_at FROM urls WHERE id = {id};")
-    this_url['created_at'] = curs.fetchone()[0]
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor() as curs:
+            curs.execute(f"SELECT name FROM urls WHERE id = {id};")
+            this_url['name'] = curs.fetchone()[0]
+            curs.execute(f"SELECT id FROM urls WHERE id = {id};")
+            this_url['id'] = curs.fetchone()[0]
+            curs.execute(f"SELECT created_at FROM urls WHERE id = {id};")
+            this_url['created_at'] = curs.fetchone()[0]
     return this_url
 
 
