@@ -146,6 +146,7 @@ category = "main"
 optional = false
 python-versions = ">=3.7"
 
+
 [[package]]
 name = "psycopg2-binary"
 version = "2.9.6"
@@ -323,6 +324,7 @@ importlib-metadata = []
 itsdangerous = []
 jinja2 = []
 markupsafe = []
+psycopg2-binary = []
 python-dotenv = []
 requests = []
 soupsieve = []
