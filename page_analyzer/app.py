@@ -1,11 +1,12 @@
 import requests
 import psycopg2
 import os
+import validators
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, \
     url_for, redirect, flash, get_flashed_messages
-from requests.exceptions import MissingSchema
+
 
 load_dotenv()
 A = os.getenv('FLASK_APP')
@@ -75,15 +76,7 @@ def get_id_url(id):
 
 
 def check_the_link(link):
-    valids = 0
-    if len(link) < 255:
-        try:
-            requests.get(link, timeout=5)
-            valids = 1
-        except MissingSchema:
-            pass
-
-    if valids == 1:
+    if validators.url(link):
         return True
 
 
@@ -154,27 +147,44 @@ def get_all_names_and_id():
     return urls
 
 
-def add_to_check_table(id):
+def check_request(id):
     name_url = get_info_by_id(id)['name']
-    r = requests.get(name_url)
-    status_code = r.status_code
-    soup = BeautifulSoup(r.text, 'html.parser')
-    title = str(soup.find_all('title'))[8:-9]
-    h1 = str(soup.find_all('h1'))[5:-7]
-    description = str(soup.find_all('meta',
-                                    attrs={'name': 'description'}))[16:-24]
+    url_info = {}
     try:
-        with psycopg2.connect(DATABASE_URL) as conn:
-            with conn.cursor() as curs:
-                curs.execute(""
-                             "INSERT INTO url_checks "
-                             "(url_id, status_code, h1, title, description) "
-                             "VALUES (%s, %s, %s, %s, %s);",
-                             (id, status_code, h1, title, description)
-                             )
-        flash('Страница успешно проверена', 'success')
-    except psycopg2.Error:
+        r = requests.get(name_url)
+        url_info['status_code'] = r.status_code
+        soup = BeautifulSoup(r.text, 'html.parser')
+        url_info['title'] = str(soup.find_all('title'))[8:-9]
+        url_info['h1'] = str(soup.find_all('h1'))[5:-7]
+        url_info['description'] = str(soup.find_all
+                                      ('meta',
+                                       attrs={'name': 'description'}))[16:-24]
+        return url_info
+    except requests.exceptions.RequestException:
         flash('Произошла ошибка при проверке', 'danger')
+        pass
+
+
+def add_to_check_table(id):
+    if check_request(id):
+        url_info = check_request(id)
+        status_code = url_info['status_code']
+        h1 = url_info['h1']
+        title = url_info['title']
+        description = url_info['description']
+        try:
+            with psycopg2.connect(DATABASE_URL) as conn:
+                with conn.cursor() as curs:
+                    curs.execute(""
+                                 "INSERT INTO url_checks "
+                                 "(url_id, status_code, h1, "
+                                 "title, description) "
+                                 "VALUES (%s, %s, %s, %s, %s);",
+                                 (id, status_code, h1, title, description)
+                                 )
+            flash('Страница успешно проверена', 'success')
+        except psycopg2.Error:
+            flash('Произошла ошибка при проверке', 'danger')
 
 
 def get_info_from_check_table(url_id):
