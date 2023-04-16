@@ -24,19 +24,21 @@ def get_root():
 def insert_value():
     with psycopg2.connect(DATABASE_URL) as conn:
         with conn.cursor() as curs:
+            normolize = urlparse(request.form.get("url"))
+            normolize_name = f"{normolize.scheme}://{normolize.netloc}"
             if check_the_link(request.form.get("url")) \
-                    and check_url_into_db(request.form.get("url")):
-                normolize = urlparse(request.form.get("url"))
-                normolize_name = f"{normolize.scheme}://{normolize.netloc}"
+                    and check_url_into_db(normolize_name):
                 curs.execute(
                     'INSERT INTO urls (name) VALUES (%s) RETURNING id;',
                     (normolize_name, ))
                 id = curs.fetchone()[0]
                 flash('Страница успешно добавлена', 'success')
                 return redirect(url_for('get_id_url', id=id))
-            elif check_the_link(request.form.get("url")):
-                url = request.form.get("url")
-                curs.execute(f"SELECT id FROM urls WHERE name = '{url}';")
+            elif check_the_link(normolize_name):
+                curs.execute(f""
+                             f"SELECT id "
+                             f"FROM urls "
+                             f"WHERE name = '{normolize_name}';")
                 id = curs.fetchone()[0]
                 flash('Страница уже существует', 'warning')
                 return redirect(url_for('get_id_url', id=id))
