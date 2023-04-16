@@ -42,7 +42,7 @@ def insert_value():
                 id = curs.fetchone()[0]
                 flash('Страница уже существует', 'info')
                 return redirect(url_for('get_id_url', id=id))
-    flash('Некорректный URL', 'error ')
+    flash('Некорректный URL', 'danger')
     return render_template(
         'index.html',
         message=get_flashed_messages(with_categories=True)
