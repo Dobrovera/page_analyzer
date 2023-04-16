@@ -11,9 +11,7 @@
  + title
  + description
  + Дату последней проверки
-
-В файле database.url можно найти SQL-запросы для создания локальной БД
-
+ 
 Для локального запуска:
 > #### git clone https://github.com/Dobrovera/python-project-83
 > 

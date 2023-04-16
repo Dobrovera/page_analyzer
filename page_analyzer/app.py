@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, \
     url_for, redirect, flash, get_flashed_messages
-
+from urllib.parse import urlparse
 
 load_dotenv()
 A = os.getenv('FLASK_APP')
@@ -26,9 +26,11 @@ def insert_value():
         with conn.cursor() as curs:
             if check_the_link(request.form.get("url")) \
                     and check_url_into_db(request.form.get("url")):
+                normolize = urlparse(request.form.get("url"))
+                normolize_name = f"{normolize.scheme}://{normolize.netloc}"
                 curs.execute(
                     'INSERT INTO urls (name) VALUES (%s) RETURNING id;',
-                    (request.form.get("url"), ))
+                    (normolize_name, ))
                 id = curs.fetchone()[0]
                 flash('Страница успешно добавлена', 'success')
                 return redirect(url_for('get_id_url', id=id))
