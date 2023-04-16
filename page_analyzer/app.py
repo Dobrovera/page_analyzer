@@ -42,7 +42,7 @@ def insert_value():
     return render_template(
         'index.html',
         message=get_flashed_messages(with_categories=True)
-    )
+    ), 422
 
 
 @app.post('/urls/<id>/checks')
