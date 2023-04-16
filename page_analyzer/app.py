@@ -159,7 +159,7 @@ def check_request(id):
         url_info['status_code'] = r.status_code
         soup = BeautifulSoup(r.text, 'html.parser')
         url_info['title'] = str(soup.find_all('title'))[8:-9]
-        url_info['h1'] = str(soup.find_all('h1'))[5:-7]
+        url_info['h1'] = str(soup.find_all('h1'))[5:-6]
         url_info['description'] = str(soup.find_all
                                       ('meta',
                                        attrs={'name': 'description'}))[16:-24]
