@@ -121,7 +121,7 @@ def check_request(id):
                                       ('meta',
                                        attrs={'name': 'description'}))[16:-23]
         return url_info
-    except requests.ConnectionError:
+    except requests.ConnectionError or requests.exceptions.RequestException:
         flash('Произошла ошибка при проверке', 'danger')
         pass
 
