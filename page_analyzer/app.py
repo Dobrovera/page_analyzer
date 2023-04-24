@@ -3,9 +3,9 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, request, \
     url_for, redirect, flash, get_flashed_messages
 from urllib.parse import urlparse
-from page_analyzer.db import check_the_link, check_url_into_db, \
-    add_to_check_table, get_all_names_and_id, get_info_by_id, \
-    get_info_from_check_table, add_to_urls_table, get_id_from_urls
+import page_analyzer.db
+import validators
+
 
 load_dotenv()
 A = os.getenv('FLASK_APP')
@@ -15,22 +15,32 @@ app.secret_key = os.getenv('SECRET_KEY')
 
 
 @app.get('/')
-def get_root():
+def get_index():
     return render_template('index.html')
 
 
 @app.post('/urls')
 def insert_value():
+    conn = page_analyzer.db.get_connection(DATABASE_URL)
     normalize = urlparse(request.form.get("url"))
     normalize_name = f"{normalize.scheme}://{normalize.netloc}"
-    if check_the_link(request.form.get("url")) \
-            and check_url_into_db(normalize_name):
-        add_to_tbl = add_to_urls_table(normalize_name)
-        return redirect(url_for('get_url', id=add_to_tbl[0]))
-    elif check_the_link(normalize_name):
-        get_from_tbl = get_id_from_urls(normalize_name)
-        return redirect(url_for('get_url', id=get_from_tbl[0]))
+
+    if validators.url(request.form.get("url")) \
+            and page_analyzer.db.check_url(conn, normalize_name):
+        add_to_tbl = page_analyzer.db.add_to_urls(conn, normalize_name)
+        if add_to_tbl:
+            flash('Страница успешно добавлена', 'success')
+        return redirect(url_for('get_url', id=add_to_tbl))
+
+    elif validators.url(normalize_name):
+        get_from_tbl = page_analyzer.db.get_id_from_urls(conn, normalize_name)
+        if get_from_tbl:
+            flash('Страница уже существует', 'info')
+        return redirect(url_for('get_url', id=get_from_tbl))
     flash('Некорректный URL', 'danger')
+
+    conn.close()
+
     return render_template(
         'index.html',
         message=get_flashed_messages(with_categories=True)
@@ -39,13 +49,24 @@ def insert_value():
 
 @app.post('/urls/<id>/checks')
 def do_check(id):
-    add_to_check_table(id)
+    conn = page_analyzer.db.get_connection(DATABASE_URL)
+    if page_analyzer.db.add_to_url_checks(conn, id):
+        flash('Страница успешно проверена', 'success')
+    else:
+        flash('Произошла ошибка при проверке', 'danger')
+
+    conn.close()
+
     return redirect(url_for('get_url', id=id))
 
 
 @app.get('/urls')
 def get_urls():
-    urls = get_all_names_and_id()
+    conn = page_analyzer.db.get_connection(DATABASE_URL)
+    urls = page_analyzer.db.get_all_names_and_id(conn)
+
+    conn.close()
+
     return render_template(
         'urls.html',
         urls=urls
@@ -54,9 +75,13 @@ def get_urls():
 
 @app.get('/urls/<id>')
 def get_url(id):
-    url = get_info_by_id(id)
+    conn = page_analyzer.db.get_connection(DATABASE_URL)
+    url = page_analyzer.db.get_info_by_id(conn, id)
     message = get_flashed_messages(with_categories=True)
-    url_check = get_info_from_check_table(id)
+    url_check = page_analyzer.db.get_info_from_url_checks(conn, id)
+
+    conn.close()
+
     return render_template(
         'urls_id.html',
         name=url['name'],
