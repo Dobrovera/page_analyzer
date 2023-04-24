@@ -1,12 +1,5 @@
 import psycopg2
-import os
-from dotenv import load_dotenv
 from page_analyzer.check_req import check_request
-
-
-load_dotenv()
-A = os.getenv('FLASK_APP')
-DATABASE_URL = os.getenv('DATABASE_URL')
 
 
 def get_connection(DATABASE_URL):
@@ -17,10 +10,9 @@ def get_connection(DATABASE_URL):
 
 def add_to_urls(curs, normalize_name):
     curs.execute(
-                'INSERT INTO urls (name) '
-                'VALUES (%s) RETURNING id;',
-                (normalize_name,))
-
+        'INSERT INTO urls (name) '
+        'VALUES (%s) RETURNING id;',
+        (normalize_name,))
     id = curs.fetchone()[0]
     return id
 
