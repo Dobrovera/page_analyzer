@@ -1,10 +1,10 @@
-import page_analyzer.db
+from page_analyzer import db
 import requests
 from bs4 import BeautifulSoup
 
 
 def check_request(curs, id):
-    name_url = page_analyzer.db.get_info_by_id(curs, id)['name']
+    name_url = db.get_info_by_id(curs, id)['name']
     url_info = {}
     try:
         r = requests.get(name_url)
@@ -15,6 +15,10 @@ def check_request(curs, id):
         url_info['description'] = str(soup.find_all
                                       ('meta',
                                        attrs={'name': 'description'}))[16:-23]
-        return url_info
+
+        if 200 <= url_info['status_code'] <= 299:
+            return url_info
+        else:
+            return False
     except requests.ConnectionError or requests.exceptions.RequestException:
         return False
