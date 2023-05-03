@@ -44,6 +44,19 @@ def get_urls(conn, id):
     return this_url
 
 
+def check_url(conn, url):
+    with conn.cursor() as curs:
+        curs.execute(
+            'SELECT name '
+            'FROM urls WHERE name = (%s);',
+            (url, ))
+        names = curs.fetchone()
+        conn.commit()
+        if names:
+            return False
+        return True
+
+
 def get_all_names_and_id(conn):
     urls = []
     with conn.cursor() as curs:

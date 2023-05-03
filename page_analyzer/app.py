@@ -26,7 +26,7 @@ def insert_value():
     normalize_name = f"{normalize.scheme}://{normalize.netloc}"
 
     if validators.url(request.form.get('url')) \
-            and db.get_id(conn, normalize_name):
+            and db.check_url(conn, normalize_name):
         added_page_id = db.add_url(conn, normalize_name)
         if added_page_id:
             flash('Страница успешно добавлена', 'success')
