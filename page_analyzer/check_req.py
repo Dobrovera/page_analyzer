@@ -13,10 +13,9 @@ def check_request(curs, id):
         url_info['title'] = str(soup.find('title').text) \
             if soup.find('title') else ''
         url_info['h1'] = str(soup.find('h1').text) if soup.find('h1') else ''
-        url_info['description'] = str(soup.find
+        url_info['description'] = str(soup.find_all
                                       ('meta',
-                                       attrs={'name': 'description'}).text) \
-            if soup.find('meta', attrs={'name': 'description'}) else ''
+                                       attrs={'name': 'description'}))[16:-23]
 
         if 200 <= url_info['status_code'] <= 299:
             return url_info
