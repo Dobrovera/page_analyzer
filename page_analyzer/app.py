@@ -22,18 +22,18 @@ def get_index():
 @app.post('/urls')
 def insert_value():
     conn = db.get_connection(DATABASE_URL)
-    normalize = urlparse(request.form.get("url"))
+    normalize = urlparse(request.form.get('url'))
     normalize_name = f"{normalize.scheme}://{normalize.netloc}"
 
-    if validators.url(request.form.get("url")) \
-            and db.check_url(conn, normalize_name):
-        added_page_id = db.add_to_urls(conn, normalize_name)
+    if validators.url(request.form.get('url')) \
+            and db.get_id(conn, normalize_name):
+        added_page_id = db.add_url(conn, normalize_name)
         if added_page_id:
             flash('Страница успешно добавлена', 'success')
         return redirect(url_for('get_url', id=added_page_id))
 
     elif validators.url(normalize_name):
-        get_from_tbl = db.get_id_from_urls(conn, normalize_name)
+        get_from_tbl = db.get_id(conn, normalize_name)
         if get_from_tbl:
             flash('Страница уже существует', 'info')
         return redirect(url_for('get_url', id=get_from_tbl))
@@ -76,9 +76,9 @@ def get_urls():
 @app.get('/urls/<id>')
 def get_url(id):
     conn = db.get_connection(DATABASE_URL)
-    url = db.get_info_by_id(conn, id)
+    url = db.get_urls(conn, id)
     message = get_flashed_messages(with_categories=True)
-    url_check = db.get_info_from_url_checks(conn, id)
+    url_check = db.get_url_checks(conn, id)
 
     conn.close()
 
