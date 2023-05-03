@@ -47,8 +47,8 @@ def get_urls(conn, id):
 def check_url(conn, url):
     with conn.cursor() as curs:
         curs.execute(
-            'SELECT name '
-            'FROM urls WHERE name = (%s);',
+            'SELECT name \
+            FROM urls WHERE name = (%s);',
             (url, ))
         names = curs.fetchone()
         conn.commit()
