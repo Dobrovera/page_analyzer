@@ -13,7 +13,7 @@ def add_url(conn, normalize_name):
             'INSERT INTO urls (name) \
             VALUES (%s) RETURNING id;',
             (normalize_name,))
-        id = curs.fetchone()[0]
+        id, = curs.fetchone()
     conn.commit()
     return id
 
@@ -24,7 +24,7 @@ def get_id(conn, normalize_name):
             'SELECT id FROM urls \
             WHERE name = (%s);',
             (normalize_name, ))
-        id = curs.fetchone()[0]
+        id, = curs.fetchone()
     conn.commit()
     return id
 
