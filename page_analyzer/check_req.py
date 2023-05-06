@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 
 
 def check_request(curs, id):
-    name_url = db.get_urls(curs, id)['name']
+    name_url = db.get_url(curs, id)[0]
     url_info = {}
     try:
         r = requests.get(name_url)

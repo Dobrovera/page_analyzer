@@ -33,7 +33,7 @@ def insert_value():
         return redirect(url_for('get_url', id=added_page_id))
 
     elif validators.url(normalize_name):
-        get_from_tbl = db.get_id(conn, normalize_name)
+        get_from_tbl = db.get_id_by_name(conn, normalize_name)
         if get_from_tbl:
             flash('Страница уже существует', 'info')
         return redirect(url_for('get_url', id=get_from_tbl))
@@ -50,7 +50,7 @@ def insert_value():
 @app.post('/urls/<id>/checks')
 def do_check(id):
     conn = db.get_connection(DATABASE_URL)
-    if db.add_to_url_checks(conn, id):
+    if db.add_url_check(conn, id):
         flash('Страница успешно проверена', 'success')
     else:
         flash('Произошла ошибка при проверке', 'danger')
@@ -76,17 +76,17 @@ def get_urls():
 @app.get('/urls/<id>')
 def get_url(id):
     conn = db.get_connection(DATABASE_URL)
-    url = db.get_urls(conn, id)
+    url = db.get_url(conn, id)
     message = get_flashed_messages(with_categories=True)
-    url_check = db.get_url_checks(conn, id)
+    url_check = db.get_url_check(conn, id)
 
     db.close(conn)
 
     return render_template(
         'urls_id.html',
-        name=url['name'],
-        id=url['id'],
-        created_at=url['created_at'],
+        name=url[0],
+        id=url[1],
+        created_at=url[2],
         message=message,
         check=url_check,
     )

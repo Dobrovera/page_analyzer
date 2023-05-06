@@ -1,4 +1,5 @@
 import psycopg2
+from psycopg2.extras import NamedTupleCursor
 from page_analyzer.check_req import check_request
 
 
@@ -18,7 +19,7 @@ def add_url(conn, normalize_name):
     return id
 
 
-def get_id(conn, normalize_name):
+def get_id_by_name(conn, normalize_name):
     with conn.cursor() as curs:
         curs.execute(
             'SELECT id FROM urls \
@@ -29,19 +30,15 @@ def get_id(conn, normalize_name):
     return id
 
 
-def get_urls(conn, id):
-    this_url = {}
-    with conn.cursor() as curs:
+def get_url(conn, id):
+    with conn.cursor(cursor_factory=NamedTupleCursor) as curs:
         curs.execute(
             'SELECT name, id, created_at \
             FROM urls WHERE id = (%s);',
             (id, ))
         result = curs.fetchone()
-        this_url['name'] = result[0]
-        this_url['id'] = result[1]
-        this_url['created_at'] = result[2]
     conn.commit()
-    return this_url
+    return [result.name, result.id, result.created_at]
 
 
 def check_url(conn, url):
@@ -87,7 +84,7 @@ def get_all_names_and_id(conn):
         return urls
 
 
-def add_to_url_checks(conn, id):
+def add_url_check(conn, id):
     if check_request(conn, id):
         url_info = check_request(conn, id)
         status_code = url_info['status_code']
@@ -107,8 +104,8 @@ def add_to_url_checks(conn, id):
                 return False
 
 
-def get_url_checks(conn, url_id):
-    urls_check = []
+def get_url_check(conn, url_id):
+    urls_checks = []
     with conn.cursor() as curs:
         try:
             curs.execute(
@@ -119,19 +116,19 @@ def get_url_checks(conn, url_id):
                 ORDER BY id DESC;',
                 (url_id, ))
             for data in curs:
-                urls_check.append(
+                urls_checks.append(
                     {"id": data[0],
-                     "created_at": data[4],
+                     "status_code": data[1],
                      "h1": data[2],
                      "title": data[3],
-                     "status_code": data[1],
+                     "created_at": data[4],
                      "description": data[5]
                      }
                 )
             conn.commit()
         except psycopg2.Error:
             return None
-        return urls_check
+        return urls_checks
 
 
 def close(conn):
