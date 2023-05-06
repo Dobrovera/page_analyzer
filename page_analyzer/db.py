@@ -132,3 +132,7 @@ def get_url_checks(conn, url_id):
         except psycopg2.Error:
             return None
         return urls_check
+
+
+def close(conn):
+    return conn.close()

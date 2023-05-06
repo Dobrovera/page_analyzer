@@ -39,7 +39,7 @@ def insert_value():
         return redirect(url_for('get_url', id=get_from_tbl))
     flash('Некорректный URL', 'danger')
 
-    conn.close()
+    db.close(conn)
 
     return render_template(
         'index.html',
@@ -55,7 +55,7 @@ def do_check(id):
     else:
         flash('Произошла ошибка при проверке', 'danger')
 
-    conn.close()
+    db.close(conn)
 
     return redirect(url_for('get_url', id=id))
 
@@ -65,7 +65,7 @@ def get_urls():
     conn = db.get_connection(DATABASE_URL)
     urls = db.get_all_names_and_id(conn)
 
-    conn.close()
+    db.close(conn)
 
     return render_template(
         'urls.html',
@@ -80,7 +80,7 @@ def get_url(id):
     message = get_flashed_messages(with_categories=True)
     url_check = db.get_url_checks(conn, id)
 
-    conn.close()
+    db.close(conn)
 
     return render_template(
         'urls_id.html',

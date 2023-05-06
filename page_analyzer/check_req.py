@@ -13,9 +13,7 @@ def check_request(curs, id):
         url_info['title'] = str(soup.find('title').text) \
             if soup.find('title') else ''
         url_info['h1'] = str(soup.find('h1').text) if soup.find('h1') else ''
-        description = str(soup.find
-                          ('meta',
-                           attrs={'name': 'description'}))
+        description = soup.find('meta', attrs={'name': 'description'})
         url_info['description'] = description['content'].strip() \
             if description else ''
 
