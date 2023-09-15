@@ -12,7 +12,7 @@ Application to analyze web pages. Prints and stores data on requested url:
  +  date of the last check
  
 To run locally:
-> #### git clone https://github.com/Dobrovera/python-project-83
+> #### git clone https://github.com/Dobrovera/page_analyzer
 > 
 > #### cd python-project-83
 > 
